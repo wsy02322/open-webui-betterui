@@ -1,19 +1,54 @@
 /*
- * Open WebUI server-side UI customization (v2)
- * Requires loader.js to add html.custom-ui-active / custom-ui-has-messages
+ * Open WebUI server-side UI customization (v3)
+ * Requires loader.js for custom-ui-active / custom-ui-has-messages / sidebar toggle
  */
 
 /* =============================================================================
-   1. Sidebar: fully hidden until left-edge hover (desktop)
+   1. Sidebar: hidden + fixed small icon button (click to expand)
    ============================================================================= */
 
-#custom-ui-sidebar-trigger {
+#custom-ui-sidebar-btn {
 	position: fixed;
-	left: 0;
-	top: 0;
-	width: 16px;
-	height: 100vh;
-	z-index: 65;
+	left: 0.55rem;
+	top: 0.55rem;
+	z-index: 80;
+	width: 2.25rem;
+	height: 2.25rem;
+	border: 0;
+	border-radius: 0.75rem;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	background: rgba(255, 255, 255, 0.92);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+	color: #111;
+	transition:
+		opacity 0.18s ease,
+		transform 0.18s ease;
+}
+
+html.dark #custom-ui-sidebar-btn {
+	background: rgba(24, 24, 24, 0.92);
+	color: #f5f5f5;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+#custom-ui-sidebar-btn img {
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 9999px;
+	display: block;
+}
+
+#custom-ui-sidebar-btn:hover {
+	transform: scale(1.05);
+}
+
+html.custom-ui-sidebar-open #custom-ui-sidebar-btn {
+	opacity: 0;
+	pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -22,12 +57,9 @@
 		left: 0 !important;
 		top: 0 !important;
 		height: 100vh !important;
-		transform: translateX(-100%) !important;
+		transform: translateX(-110%) !important;
 		opacity: 0 !important;
 		pointer-events: none !important;
-		transition:
-			transform 0.22s ease,
-			opacity 0.22s ease !important;
 		z-index: 70 !important;
 	}
 
@@ -36,36 +68,66 @@
 		left: 0 !important;
 		top: 0 !important;
 		z-index: 70 !important;
+		box-shadow: 8px 0 24px rgba(0, 0, 0, 0.18);
 	}
 }
 
 /* =============================================================================
-   2. Top navbar: hide model selector when chat has messages
+   2. Top navbar: overlay so content can use full viewport height
    ============================================================================= */
 
-html.custom-ui-has-messages nav.sticky.top-0 {
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 {
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	width: 100% !important;
 	margin-bottom: 0 !important;
+	min-height: 0 !important;
+	padding-top: 0.25rem !important;
+	padding-bottom: 0.25rem !important;
+	background: transparent !important;
+	z-index: 45 !important;
+	pointer-events: none;
 }
 
-html.custom-ui-has-messages nav.sticky.top-0 .flex-1.overflow-hidden {
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div {
+	background: transparent !important;
+}
+
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	max-height: 0 !important;
 	opacity: 0 !important;
 	overflow: hidden !important;
 	pointer-events: none !important;
+	width: 0 !important;
+	flex: 0 0 0 !important;
 	transition:
 		max-height 0.22s ease,
 		opacity 0.22s ease !important;
 }
 
-html.custom-ui-has-messages nav.sticky.top-0:hover .flex-1.overflow-hidden,
-html.custom-ui-has-messages nav.sticky.top-0:focus-within .flex-1.overflow-hidden {
+html.custom-ui-has-messages #chat-container nav.sticky.top-0:hover .flex-1.overflow-hidden,
+html.custom-ui-has-messages #chat-container nav.sticky.top-0:focus-within .flex-1.overflow-hidden {
 	max-height: 8rem !important;
 	opacity: 1 !important;
 	pointer-events: auto !important;
+	width: auto !important;
+	flex: 1 1 auto !important;
 }
 
-html.custom-ui-has-messages nav.sticky.top-0 {
-	min-height: 2.5rem;
+/* Keep only right-side controls interactive when model selector is collapsed */
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.flex.flex-none {
+	pointer-events: auto;
+	margin-left: auto;
+	background: rgba(255, 255, 255, 0.88);
+	border-radius: 9999px;
+	padding: 0.1rem 0.15rem;
+	backdrop-filter: blur(8px);
+}
+
+html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.flex.flex-none {
+	background: rgba(17, 17, 17, 0.82);
 }
 
 #navbar-bg-gradient-to-b {
@@ -73,24 +135,55 @@ html.custom-ui-has-messages nav.sticky.top-0 {
 }
 
 /* =============================================================================
-   3. Stop sticky navbar from overlapping message content
+   3. Chat pane fills viewport; messages pad for overlay chrome
    ============================================================================= */
 
-html.custom-ui-active nav.sticky.top-0 {
-	margin-bottom: 0 !important;
+html.custom-ui-has-messages #chat-container > div,
+html.custom-ui-has-messages #chat-container .Pane,
+html.custom-ui-has-messages #chat-container [data-pane] {
+	min-height: 0;
 }
 
 html.custom-ui-has-messages #chat-pane {
-	padding-top: 0.25rem !important;
+	position: relative !important;
+	height: 100% !important;
+	max-height: 100% !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
 }
 
 html.custom-ui-has-messages #messages-container {
-	padding-top: 0.5rem !important;
-	padding-bottom: 5rem !important;
+	padding-top: 0.35rem !important;
+	padding-bottom: 4.75rem !important;
+	height: 100% !important;
 }
 
 html.custom-ui-has-messages [id^='message-'] {
-	scroll-margin-top: 3.25rem !important;
+	scroll-margin-top: 0.5rem !important;
+}
+
+html.custom-ui-has-messages .message-listitem:first-child {
+	padding-top: 0.15rem !important;
+	margin-top: 0 !important;
+}
+
+/* Floating input host: overlay bottom, do not consume flex height */
+html.custom-ui-has-messages #chat-pane > .pb-2,
+html.custom-ui-has-messages #chat-pane > div.z-10.pb-2,
+html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] {
+	position: absolute !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	z-index: 40 !important;
+	padding: 0.4rem 0.5rem 0.65rem !important;
+	background: transparent !important;
+	pointer-events: none;
+}
+
+html.custom-ui-has-messages #chat-pane > .pb-2 > *,
+html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
+	pointer-events: auto;
 }
 
 /* =============================================================================
@@ -107,7 +200,7 @@ html.custom-ui-has-messages [id^='message-'] {
 	html.custom-ui-active [id^='responses-container-'] > div.snap-center {
 		flex: 1 1 0 !important;
 		margin: 0 !important;
-		padding: 0.5rem 0.75rem !important;
+		padding: 0.35rem 0.6rem !important;
 		border-radius: 0 !important;
 		border: none !important;
 		border-right: 1px solid rgba(127, 127, 127, 0.28) !important;
@@ -120,7 +213,7 @@ html.custom-ui-has-messages [id^='message-'] {
 	}
 
 	html.custom-ui-active [id^='responses-container-'] > div.snap-center:not(.border-dashed) {
-		background: rgba(127, 127, 127, 0.06) !important;
+		background: rgba(127, 127, 127, 0.05) !important;
 	}
 }
 
@@ -137,7 +230,7 @@ html.custom-ui-active .message-listitem .flex-auto.pl-1 {
 }
 
 /* =============================================================================
-   5. Bottom input: collapsed by default, expand on hover/focus
+   5. Bottom input: compact pill until hover/focus
    ============================================================================= */
 
 html.custom-ui-has-messages #message-input-container {
@@ -149,15 +242,16 @@ html.custom-ui-has-messages #message-input-container {
 		border-radius 0.25s ease !important;
 	margin-left: auto !important;
 	margin-right: auto !important;
+	backdrop-filter: blur(10px);
 }
 
 html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) {
-	width: min(360px, 78vw) !important;
-	max-height: 2.85rem !important;
+	width: min(280px, 70vw) !important;
+	max-height: 2.6rem !important;
 	overflow: hidden !important;
 	border-radius: 9999px !important;
-	opacity: 0.72 !important;
-	transform: translateY(0) scale(0.94) !important;
+	opacity: 0.78 !important;
+	transform: scale(0.96) !important;
 	transform-origin: bottom center !important;
 }
 
@@ -175,8 +269,8 @@ html.custom-ui-has-messages
 }
 
 html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #chat-input-container {
-	padding-top: 0.4rem !important;
-	padding-bottom: 0.4rem !important;
+	padding-top: 0.35rem !important;
+	padding-bottom: 0.35rem !important;
 }
 
 html.custom-ui-has-messages #message-input-container:focus-within,

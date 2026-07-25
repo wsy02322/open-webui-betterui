@@ -2,7 +2,7 @@
 	'use strict';
 
 	const MOBILE_BREAKPOINT = 768;
-	const SIDEBAR_LEAVE_DELAY_MS = 300;
+	const SIDEBAR_LEAVE_DELAY_MS = 350;
 
 	let sidebarLeaveTimer = null;
 
@@ -22,30 +22,63 @@
 	}
 
 	function isSidebarExpanded(sidebar) {
-		return sidebar.getAttribute('data-state') === 'true';
+		return sidebar?.getAttribute('data-state') === 'true';
 	}
 
-	function ensureSidebarTrigger() {
-		if (document.getElementById('custom-ui-sidebar-trigger')) return;
+	function syncSidebarOpenClass() {
+		const sidebar = document.getElementById('sidebar');
+		const open = isSidebarExpanded(sidebar);
+		document.documentElement.classList.toggle('custom-ui-sidebar-open', open);
 
-		const trigger = document.createElement('div');
-		trigger.id = 'custom-ui-sidebar-trigger';
-		trigger.setAttribute('aria-hidden', 'true');
-		document.body.appendChild(trigger);
+		const btn = document.getElementById('custom-ui-sidebar-btn');
+		if (btn) {
+			btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+			btn.style.display = open ? 'none' : 'inline-flex';
+		}
+	}
 
-		trigger.addEventListener('mouseenter', () => {
-			if (!isDesktop()) return;
-			const sidebar = document.getElementById('sidebar');
-			if (!sidebar || isSidebarExpanded(sidebar)) return;
-			findSidebarToggleButton(sidebar)?.click();
+	function toggleSidebar() {
+		const sidebar = document.getElementById('sidebar');
+		if (!sidebar) return;
+		findSidebarToggleButton(sidebar)?.click();
+		window.setTimeout(syncSidebarOpenClass, 50);
+	}
+
+	function ensureSidebarButton() {
+		let btn = document.getElementById('custom-ui-sidebar-btn');
+		if (btn) return btn;
+
+		btn = document.createElement('button');
+		btn.id = 'custom-ui-sidebar-btn';
+		btn.type = 'button';
+		btn.title = 'Open sidebar';
+		btn.setAttribute('aria-label', 'Open sidebar');
+		btn.setAttribute('aria-expanded', 'false');
+
+		const img = document.createElement('img');
+		img.src = '/static/favicon.png';
+		img.alt = '';
+		img.draggable = false;
+		btn.appendChild(img);
+
+		btn.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			toggleSidebar();
 		});
+
+		document.body.appendChild(btn);
+		return btn;
 	}
 
 	function collapseSidebarIfNeeded() {
-		if (!isDesktop()) return;
 		const sidebar = document.getElementById('sidebar');
-		if (!sidebar || !isSidebarExpanded(sidebar)) return;
+		if (!sidebar || !isSidebarExpanded(sidebar)) {
+			syncSidebarOpenClass();
+			return;
+		}
 		findSidebarToggleButton(sidebar)?.click();
+		window.setTimeout(syncSidebarOpenClass, 50);
 	}
 
 	function setupSidebarHover() {
@@ -54,18 +87,16 @@
 
 		sidebar.dataset.customHoverBound = '1';
 
-		sidebar.addEventListener('mouseenter', () => {
-			clearTimeout(sidebarLeaveTimer);
-			if (!isDesktop() || isSidebarExpanded(sidebar)) return;
-			findSidebarToggleButton(sidebar)?.click();
-		});
-
 		sidebar.addEventListener('mouseleave', () => {
 			if (!isDesktop() || !isSidebarExpanded(sidebar)) return;
 			clearTimeout(sidebarLeaveTimer);
 			sidebarLeaveTimer = window.setTimeout(() => {
 				collapseSidebarIfNeeded();
 			}, SIDEBAR_LEAVE_DELAY_MS);
+		});
+
+		sidebar.addEventListener('mouseenter', () => {
+			clearTimeout(sidebarLeaveTimer);
 		});
 	}
 
@@ -76,6 +107,7 @@
 			document.querySelector('#messages-container .message-listitem, .message-listitem')
 		);
 		document.documentElement.classList.toggle('custom-ui-has-messages', hasMessages);
+		syncSidebarOpenClass();
 	}
 
 	function bootstrapSidebarState() {
@@ -87,11 +119,13 @@
 
 		window.setTimeout(() => {
 			collapseSidebarIfNeeded();
-		}, 300);
+			ensureSidebarButton();
+			syncSidebarOpenClass();
+		}, 250);
 	}
 
 	function init() {
-		ensureSidebarTrigger();
+		ensureSidebarButton();
 		setupSidebarHover();
 		updatePageState();
 		bootstrapSidebarState();
@@ -104,6 +138,7 @@
 	}
 
 	const observer = new MutationObserver(() => {
+		ensureSidebarButton();
 		setupSidebarHover();
 		updatePageState();
 	});
