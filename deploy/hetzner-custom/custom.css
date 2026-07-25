@@ -1,10 +1,10 @@
 /*
- * Open WebUI server-side UI customization (v4)
- * Expand on interact; collapse when interacting outside each chrome region.
+ * Open WebUI server-side UI customization (v5)
+ * Mobile fixes + collapsed topbar keeps first model visible
  */
 
 /* =============================================================================
-   1. Sidebar: min = favicon button; open = full sidebar
+   1. Sidebar button (works on mobile + desktop)
    ============================================================================= */
 
 #custom-ui-sidebar-btn {
@@ -21,14 +21,12 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	background: rgba(255, 255, 255, 0.92);
+	background: rgba(255, 255, 255, 0.94);
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-	color: #111;
 }
 
 html.dark #custom-ui-sidebar-btn {
-	background: rgba(24, 24, 24, 0.92);
-	color: #f5f5f5;
+	background: rgba(24, 24, 24, 0.94);
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
@@ -37,12 +35,14 @@ html.dark #custom-ui-sidebar-btn {
 	height: 1.25rem;
 	border-radius: 9999px;
 	display: block;
+	pointer-events: none;
 }
 
 html.custom-ui-sidebar-open #custom-ui-sidebar-btn {
 	display: none !important;
 }
 
+/* Desktop: hide collapsed icon-rail sidebar off-screen */
 @media (min-width: 768px) {
 	html.custom-ui-active #sidebar:not([data-state='true']) {
 		position: fixed !important;
@@ -64,8 +64,15 @@ html.custom-ui-sidebar-open #custom-ui-sidebar-btn {
 	}
 }
 
+/* Mobile: when closed, hide native navbar sidebar icon (we use custom btn) */
+@media (max-width: 767px) {
+	html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div > div > div.flex.items-center > div.flex-none:first-child {
+		display: none !important;
+	}
+}
+
 /* =============================================================================
-   2. Top toolbar: min = right controls only; open = show model selector
+   2. Top toolbar overlay
    ============================================================================= */
 
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 {
@@ -78,65 +85,102 @@ html.custom-ui-has-messages #chat-container nav.sticky.top-0 {
 	min-height: 0 !important;
 	padding-top: 0.2rem !important;
 	padding-bottom: 0.2rem !important;
+	padding-left: 2.7rem !important; /* room for custom sidebar btn */
 	background: transparent !important;
 	z-index: 45 !important;
 	pointer-events: none;
 }
 
-html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div {
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div,
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div > div {
 	background: transparent !important;
 }
 
-/* Always keep right controls usable */
+/* Re-enable interactive controls inside nav */
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 button,
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 a,
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.flex.flex-none,
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
+	pointer-events: auto !important;
+}
+
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.flex.flex-none {
-	pointer-events: auto;
 	margin-left: auto;
-	background: rgba(255, 255, 255, 0.9);
+	background: rgba(255, 255, 255, 0.92);
 	border-radius: 9999px;
 	padding: 0.1rem 0.15rem;
 	backdrop-filter: blur(8px);
 }
 
 html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.flex.flex-none {
-	background: rgba(17, 17, 17, 0.85);
+	background: rgba(17, 17, 17, 0.88);
 }
 
-/* Collapsed: hide model selector */
-html.custom-ui-has-messages:not(.custom-ui-topbar-open) #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
-	max-height: 0 !important;
-	opacity: 0 !important;
-	overflow: hidden !important;
-	pointer-events: none !important;
-	width: 0 !important;
-	flex: 0 0 0 !important;
-}
-
-/* Expanded: show model selector */
-html.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
-	max-height: 8rem !important;
+/* Collapsed: keep first model only */
+html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	opacity: 1 !important;
-	pointer-events: auto !important;
+	overflow: hidden !important;
 	width: auto !important;
 	flex: 1 1 auto !important;
-	margin-right: 0.5rem;
+	min-width: 0 !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open) #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
+	max-height: 2rem !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:not(:first-child) {
+	display: none !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	button[aria-label='Add Model'],
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	button[aria-label='Remove Model'] {
+	display: none !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:first-child {
+	max-width: 100% !important;
+}
+
+/* Expanded: show all models */
+html.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
+	max-height: 14rem !important;
 }
 
 html.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 {
 	pointer-events: auto;
-	background: rgba(255, 255, 255, 0.92) !important;
+	background: rgba(255, 255, 255, 0.94) !important;
 	backdrop-filter: blur(10px);
 }
 
 html.dark.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 {
-	background: rgba(17, 17, 17, 0.9) !important;
+	background: rgba(17, 17, 17, 0.92) !important;
 }
 
 #custom-ui-topbar-hit {
 	position: fixed;
 	top: 0;
-	left: 3.2rem;
-	right: 7.5rem;
-	height: 2.4rem;
+	left: 3.1rem;
+	right: 7.2rem;
+	height: 2.35rem;
 	z-index: 44;
 	background: transparent;
 }
@@ -151,21 +195,24 @@ html:not(.custom-ui-has-messages) #custom-ui-topbar-hit {
 }
 
 /* =============================================================================
-   3. Content fills viewport; overlay chrome does not reserve flex height
+   3. Full-height content + overlay input
    ============================================================================= */
 
 html.custom-ui-has-messages #chat-pane {
 	position: relative !important;
 	height: 100% !important;
 	max-height: 100% !important;
-	padding-top: 0 !important;
-	padding-bottom: 0 !important;
+	padding: 0 !important;
 }
 
 html.custom-ui-has-messages #messages-container {
-	padding-top: 0.25rem !important;
-	padding-bottom: 4.5rem !important;
+	padding-top: 2.6rem !important; /* clear collapsed top model row */
+	padding-bottom: 5.25rem !important; /* clear floating input */
 	height: 100% !important;
+}
+
+html.custom-ui-has-messages.custom-ui-topbar-open #messages-container {
+	padding-top: 0.35rem !important;
 }
 
 html.custom-ui-has-messages [id^='message-'] {
@@ -179,7 +226,7 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] {
 	right: 0 !important;
 	bottom: 0 !important;
 	z-index: 40 !important;
-	padding: 0.35rem 0.5rem 0.6rem !important;
+	padding: 0.35rem 0.5rem 0.7rem !important;
 	background: transparent !important;
 	pointer-events: none;
 }
@@ -190,7 +237,7 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
 }
 
 /* =============================================================================
-   4. Multi-column polish (preserve original snap/min-width behavior)
+   4. Multi-column polish (desktop)
    ============================================================================= */
 
 @media (min-width: 768px) {
@@ -229,7 +276,7 @@ html.custom-ui-active .message-listitem .flex-auto.pl-1 {
 }
 
 /* =============================================================================
-   5. Bottom input: min pill; open = full input
+   5. Bottom input min/open
    ============================================================================= */
 
 html.custom-ui-has-messages #message-input-container {
@@ -249,7 +296,7 @@ html.custom-ui-has-messages:not(.custom-ui-input-open) #message-input-container 
 	max-height: 2.45rem !important;
 	overflow: hidden !important;
 	border-radius: 9999px !important;
-	opacity: 0.75 !important;
+	opacity: 0.78 !important;
 	transform: scale(0.95) !important;
 	transform-origin: bottom center !important;
 }
