@@ -1,0 +1,144 @@
+/*
+ * Open WebUI server-side UI customization
+ * Mount to: /app/build/static/custom.css
+ */
+
+/* =============================================================================
+   2. Top navbar: hide ModelSelector when chat has messages, show on nav hover
+   ============================================================================= */
+
+#chat-container:has(.message-listitem) nav.sticky .flex-1.overflow-hidden {
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	pointer-events: none;
+	transition:
+		max-height 0.22s ease,
+		opacity 0.22s ease;
+}
+
+#chat-container:has(.message-listitem) nav.sticky:hover .flex-1.overflow-hidden,
+#chat-container:has(.message-listitem) nav.sticky:focus-within .flex-1.overflow-hidden {
+	max-height: 8rem;
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Keep a hover target along the top edge when model selector is collapsed */
+#chat-container:has(.message-listitem) nav.sticky {
+	min-height: 2.75rem;
+}
+
+/* =============================================================================
+   4. Prevent main content from sitting under the sticky navbar
+   ============================================================================= */
+
+nav.sticky.top-0 {
+	margin-bottom: 0 !important;
+}
+
+#messages-container {
+	padding-top: 2.75rem !important;
+}
+
+[id^='message-'] {
+	scroll-margin-top: 3.5rem !important;
+}
+
+#navbar-bg-gradient-to-b {
+	opacity: 0.35;
+}
+
+/* =============================================================================
+   3. Multi-column visual polish (desktop only, preserve snap/scroll/min-width)
+   ============================================================================= */
+
+@media (min-width: 768px) {
+	.message-listitem:has([id^='responses-container-']) {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		max-width: 100% !important;
+	}
+
+	[id^='responses-container-'] > div.snap-center {
+		flex: 1 1 0 !important;
+		margin: 0 !important;
+		padding: 0.5rem 0.75rem !important;
+		border-radius: 0 !important;
+		border: none !important;
+		border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent) !important;
+		box-shadow: none !important;
+		background: transparent !important;
+	}
+
+	[id^='responses-container-'] > div.snap-center:last-child {
+		border-right: none !important;
+	}
+
+	/* Subtle highlight for the active column without heavy borders */
+	[id^='responses-container-'] > div.snap-center:not(.border-dashed) {
+		background: color-mix(in srgb, currentColor 4%, transparent) !important;
+	}
+}
+
+/* Hide model avatar (OI icon) in assistant messages */
+.assistant-message-profile-image {
+	display: none !important;
+}
+
+.message-listitem .shrink-0:has(.assistant-message-profile-image) {
+	display: none !important;
+}
+
+.message-listitem .flex-auto.pl-1 {
+	padding-left: 0 !important;
+}
+
+/* =============================================================================
+   5. Bottom input: collapsed by default, expand on hover/focus
+   ============================================================================= */
+
+#message-input-container {
+	transition:
+		width 0.25s ease,
+		opacity 0.25s ease,
+		transform 0.25s ease,
+		border-radius 0.25s ease;
+	margin-left: auto !important;
+	margin-right: auto !important;
+}
+
+#message-input-container:not(:focus-within):not(:hover) {
+	width: min(420px, 72vw) !important;
+	border-radius: 9999px !important;
+	opacity: 0.78;
+	transform: scale(0.93);
+	transform-origin: bottom center;
+}
+
+#message-input-container:not(:focus-within):not(:hover) > .flex.justify-between {
+	display: none !important;
+}
+
+#message-input-container:not(:focus-within):not(:hover) #chat-input-container {
+	padding-top: 0.45rem !important;
+	padding-bottom: 0.45rem !important;
+}
+
+#message-input-container:focus-within,
+#message-input-container:hover {
+	width: 100% !important;
+	opacity: 1;
+	transform: none;
+	border-radius: 1.5rem !important;
+}
+
+/* =============================================================================
+   1. Sidebar icon rail (width tweak; expand/collapse handled in loader.js)
+   ============================================================================= */
+
+@media (min-width: 768px) {
+	#sidebar:not([data-state='true']) {
+		width: 2.75rem !important;
+	}
+}
