@@ -1,96 +1,138 @@
 /*
- * Open WebUI server-side UI customization
- * Mount to: /app/build/static/custom.css
+ * Open WebUI server-side UI customization (v2)
+ * Requires loader.js to add html.custom-ui-active / custom-ui-has-messages
  */
 
 /* =============================================================================
-   2. Top navbar: hide ModelSelector when chat has messages, show on nav hover
+   1. Sidebar: fully hidden until left-edge hover (desktop)
    ============================================================================= */
 
-#chat-container:has(.message-listitem) nav.sticky .flex-1.overflow-hidden {
-	max-height: 0;
-	opacity: 0;
-	overflow: hidden;
-	pointer-events: none;
-	transition:
-		max-height 0.22s ease,
-		opacity 0.22s ease;
+#custom-ui-sidebar-trigger {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 16px;
+	height: 100vh;
+	z-index: 65;
 }
 
-#chat-container:has(.message-listitem) nav.sticky:hover .flex-1.overflow-hidden,
-#chat-container:has(.message-listitem) nav.sticky:focus-within .flex-1.overflow-hidden {
-	max-height: 8rem;
-	opacity: 1;
-	pointer-events: auto;
-}
+@media (min-width: 768px) {
+	html.custom-ui-active #sidebar:not([data-state='true']) {
+		position: fixed !important;
+		left: 0 !important;
+		top: 0 !important;
+		height: 100vh !important;
+		transform: translateX(-100%) !important;
+		opacity: 0 !important;
+		pointer-events: none !important;
+		transition:
+			transform 0.22s ease,
+			opacity 0.22s ease !important;
+		z-index: 70 !important;
+	}
 
-/* Keep a hover target along the top edge when model selector is collapsed */
-#chat-container:has(.message-listitem) nav.sticky {
-	min-height: 2.75rem;
+	html.custom-ui-active #sidebar[data-state='true'] {
+		position: fixed !important;
+		left: 0 !important;
+		top: 0 !important;
+		z-index: 70 !important;
+	}
 }
 
 /* =============================================================================
-   4. Prevent main content from sitting under the sticky navbar
+   2. Top navbar: hide model selector when chat has messages
    ============================================================================= */
 
-nav.sticky.top-0 {
+html.custom-ui-has-messages nav.sticky.top-0 {
 	margin-bottom: 0 !important;
 }
 
-#messages-container {
-	padding-top: 2.75rem !important;
+html.custom-ui-has-messages nav.sticky.top-0 .flex-1.overflow-hidden {
+	max-height: 0 !important;
+	opacity: 0 !important;
+	overflow: hidden !important;
+	pointer-events: none !important;
+	transition:
+		max-height 0.22s ease,
+		opacity 0.22s ease !important;
 }
 
-[id^='message-'] {
-	scroll-margin-top: 3.5rem !important;
+html.custom-ui-has-messages nav.sticky.top-0:hover .flex-1.overflow-hidden,
+html.custom-ui-has-messages nav.sticky.top-0:focus-within .flex-1.overflow-hidden {
+	max-height: 8rem !important;
+	opacity: 1 !important;
+	pointer-events: auto !important;
+}
+
+html.custom-ui-has-messages nav.sticky.top-0 {
+	min-height: 2.5rem;
 }
 
 #navbar-bg-gradient-to-b {
-	opacity: 0.35;
+	display: none !important;
 }
 
 /* =============================================================================
-   3. Multi-column visual polish (desktop only, preserve snap/scroll/min-width)
+   3. Stop sticky navbar from overlapping message content
+   ============================================================================= */
+
+html.custom-ui-active nav.sticky.top-0 {
+	margin-bottom: 0 !important;
+}
+
+html.custom-ui-has-messages #chat-pane {
+	padding-top: 0.25rem !important;
+}
+
+html.custom-ui-has-messages #messages-container {
+	padding-top: 0.5rem !important;
+	padding-bottom: 5rem !important;
+}
+
+html.custom-ui-has-messages [id^='message-'] {
+	scroll-margin-top: 3.25rem !important;
+}
+
+/* =============================================================================
+   4. Multi-column visual polish (desktop only, preserve snap/scroll/min-width)
    ============================================================================= */
 
 @media (min-width: 768px) {
-	.message-listitem:has([id^='responses-container-']) {
+	html.custom-ui-active .message-listitem:has([id^='responses-container-']) {
 		padding-left: 0 !important;
 		padding-right: 0 !important;
 		max-width: 100% !important;
 	}
 
-	[id^='responses-container-'] > div.snap-center {
+	html.custom-ui-active [id^='responses-container-'] > div.snap-center {
 		flex: 1 1 0 !important;
 		margin: 0 !important;
 		padding: 0.5rem 0.75rem !important;
 		border-radius: 0 !important;
 		border: none !important;
-		border-right: 1px solid color-mix(in srgb, currentColor 12%, transparent) !important;
+		border-right: 1px solid rgba(127, 127, 127, 0.28) !important;
 		box-shadow: none !important;
 		background: transparent !important;
 	}
 
-	[id^='responses-container-'] > div.snap-center:last-child {
+	html.custom-ui-active [id^='responses-container-'] > div.snap-center:last-child {
 		border-right: none !important;
 	}
 
-	/* Subtle highlight for the active column without heavy borders */
-	[id^='responses-container-'] > div.snap-center:not(.border-dashed) {
-		background: color-mix(in srgb, currentColor 4%, transparent) !important;
+	html.custom-ui-active [id^='responses-container-'] > div.snap-center:not(.border-dashed) {
+		background: rgba(127, 127, 127, 0.06) !important;
 	}
 }
 
-/* Hide model avatar (OI icon) in assistant messages */
-.assistant-message-profile-image {
+html.custom-ui-active .assistant-message-profile-image {
 	display: none !important;
 }
 
-.message-listitem .shrink-0:has(.assistant-message-profile-image) {
+html.custom-ui-active .message-listitem .shrink-0:has(.assistant-message-profile-image) {
 	display: none !important;
 }
 
-.message-listitem .flex-auto.pl-1 {
+html.custom-ui-active .message-listitem .flex-auto.pl-1 {
 	padding-left: 0 !important;
 }
 
@@ -98,47 +140,50 @@ nav.sticky.top-0 {
    5. Bottom input: collapsed by default, expand on hover/focus
    ============================================================================= */
 
-#message-input-container {
+html.custom-ui-has-messages #message-input-container {
 	transition:
+		max-height 0.25s ease,
 		width 0.25s ease,
 		opacity 0.25s ease,
 		transform 0.25s ease,
-		border-radius 0.25s ease;
+		border-radius 0.25s ease !important;
 	margin-left: auto !important;
 	margin-right: auto !important;
 }
 
-#message-input-container:not(:focus-within):not(:hover) {
-	width: min(420px, 72vw) !important;
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) {
+	width: min(360px, 78vw) !important;
+	max-height: 2.85rem !important;
+	overflow: hidden !important;
 	border-radius: 9999px !important;
-	opacity: 0.78;
-	transform: scale(0.93);
-	transform-origin: bottom center;
+	opacity: 0.72 !important;
+	transform: translateY(0) scale(0.94) !important;
+	transform-origin: bottom center !important;
 }
 
-#message-input-container:not(:focus-within):not(:hover) > .flex.justify-between {
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #input-menu-button,
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #voice-input-button,
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #send-message-button,
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #create-note-button,
+html.custom-ui-has-messages
+	#message-input-container:not(:focus-within):not(:hover)
+	> .flex.justify-between,
+html.custom-ui-has-messages
+	#message-input-container:not(:focus-within):not(:hover)
+	.self-end.flex.space-x-1 {
 	display: none !important;
 }
 
-#message-input-container:not(:focus-within):not(:hover) #chat-input-container {
-	padding-top: 0.45rem !important;
-	padding-bottom: 0.45rem !important;
+html.custom-ui-has-messages #message-input-container:not(:focus-within):not(:hover) #chat-input-container {
+	padding-top: 0.4rem !important;
+	padding-bottom: 0.4rem !important;
 }
 
-#message-input-container:focus-within,
-#message-input-container:hover {
+html.custom-ui-has-messages #message-input-container:focus-within,
+html.custom-ui-has-messages #message-input-container:hover {
 	width: 100% !important;
-	opacity: 1;
-	transform: none;
+	max-height: 24rem !important;
+	opacity: 1 !important;
+	transform: none !important;
 	border-radius: 1.5rem !important;
-}
-
-/* =============================================================================
-   1. Sidebar icon rail (width tweak; expand/collapse handled in loader.js)
-   ============================================================================= */
-
-@media (min-width: 768px) {
-	#sidebar:not([data-state='true']) {
-		width: 2.75rem !important;
-	}
 }
