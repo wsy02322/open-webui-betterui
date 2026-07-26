@@ -197,12 +197,18 @@
 
 		btn.dataset.customBound = '1';
 
+		let lastActivateAt = 0;
 		const activate = (event) => {
 			event.preventDefault();
 			event.stopPropagation();
 			if (typeof event.stopImmediatePropagation === 'function') {
 				event.stopImmediatePropagation();
 			}
+
+			const now = Date.now();
+			if (now - lastActivateAt < 450) return;
+			lastActivateAt = now;
+
 			closeTopbar();
 			closeInput();
 			openSidebar();
