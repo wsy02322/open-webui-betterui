@@ -1,6 +1,6 @@
 /*
- * Open WebUI server-side UI customization (v12)
- * Collapsed: in-use models stacked with zero line-gap; click expands list
+ * Open WebUI server-side UI customization (v13)
+ * Collapsed: in-use models stacked with zero line-gap + full names
  */
 
 /* =============================================================================
@@ -148,6 +148,10 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	nav.sticky.top-0
 	.flex-1.overflow-hidden {
 	max-height: none !important;
+	max-width: none !important;
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
 	overflow: visible !important;
 }
 
@@ -168,36 +172,80 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	gap: 0 !important;
 	row-gap: 0 !important;
 	height: auto !important;
-	width: 100% !important;
-	max-width: none !important;
+	width: max-content !important;
+	max-width: calc(100vw - 7.5rem) !important;
 	overflow: visible !important;
 	line-height: 1 !important;
 }
 
+/* Each model row: block layout, no flex min-height / margins */
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	.custom-ui-model-stack
-	> *,
+	> .flex.w-full,
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
 	> div.flex.flex-col
-	> * {
-	display: flex !important;
+	> .flex.w-full {
+	display: block !important;
 	visibility: visible !important;
 	opacity: 1 !important;
 	position: static !important;
-	left: auto !important;
-	top: auto !important;
 	margin: 0 !important;
-	padding-top: 0 !important;
-	padding-bottom: 0 !important;
+	padding: 0 !important;
 	width: max-content !important;
 	max-width: 100% !important;
 	min-width: 0 !important;
 	min-height: 0 !important;
+	height: auto !important;
+	line-height: 1 !important;
+}
+
+/* Unwrap overflow / max-width wrappers inside each row */
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	.flex.w-full
+	.overflow-hidden,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.w-full
+	.overflow-hidden,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	.flex.w-full
+	.max-w-full,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.w-full
+	.max-w-full,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	.relative.w-full,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.relative.w-full {
+	overflow: visible !important;
+	max-width: none !important;
+	width: auto !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	min-height: 0 !important;
+	height: auto !important;
 	line-height: 1 !important;
 }
 
@@ -205,20 +253,56 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	button[id^='model-selector-'] {
-	max-width: 100% !important;
-	width: max-content !important;
+	display: block !important;
+	width: auto !important;
+	max-width: none !important;
 	min-height: 0 !important;
 	height: auto !important;
-	padding-top: 0 !important;
-	padding-bottom: 0 !important;
+	padding: 0 !important;
 	margin: 0 !important;
-	line-height: 1.15 !important;
+	line-height: 1 !important;
 	white-space: nowrap !important;
-	overflow: hidden !important;
-	text-overflow: ellipsis !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
 	pointer-events: auto !important;
-	justify-content: flex-start !important;
 	text-align: left !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	button[id^='model-selector-']
+	> div {
+	display: block !important;
+	width: auto !important;
+	max-width: none !important;
+	min-height: 0 !important;
+	height: auto !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	line-height: 1 !important;
+	white-space: nowrap !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	button[id^='model-selector-']
+	.truncate {
+	overflow: visible !important;
+	text-overflow: clip !important;
+	white-space: nowrap !important;
+}
+
+/* Chevron only on first row in source DOM; hide to save width/height */
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	button[id^='model-selector-']
+	svg {
+	display: none !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
@@ -236,9 +320,9 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	display: none !important;
 }
 
-/* Keep message top padding large enough for multi-line collapsed model list */
+/* Compact stack: ~1em per model (text-lg + line-height:1) + small nav pad */
 html.custom-ui-has-messages:not(.custom-ui-topbar-open) #messages-container {
-	padding-top: 4.75rem !important;
+	padding-top: 3.35rem !important;
 }
 
 /* Expanded: show currently in-use models as a normal vertical list */
