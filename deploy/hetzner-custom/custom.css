@@ -1,6 +1,6 @@
 /*
- * Open WebUI server-side UI customization (v8)
- * Bugbot fixes: pb-2 selector, mobile sidebar, top/input hit layers, observer debounce
+ * Open WebUI server-side UI customization (v10)
+ * Collapsed topbar: crude same-row overlap of ALL active models
  */
 
 /* =============================================================================
@@ -134,10 +134,10 @@ html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.fl
 	background: rgba(17, 17, 17, 0.88);
 }
 
-/* Collapsed: all active models overlap on one row */
+/* Collapsed: crude same-row overlap of ALL models (unreadability OK) */
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	opacity: 1 !important;
-	overflow: hidden !important;
+	overflow: visible !important;
 	width: auto !important;
 	flex: 1 1 auto !important;
 	min-width: 0 !important;
@@ -147,131 +147,137 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	.flex-1.overflow-hidden {
-	max-height: 2.1rem !important;
+	max-height: 2.2rem !important;
+	overflow: visible !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
+	.custom-ui-model-stack,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
 	.flex-1.overflow-hidden
-	.flex.flex-col {
+	> div.flex.flex-col {
+	display: flex !important;
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center !important;
-	width: max-content !important;
-	max-width: 100% !important;
-}
-
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full {
-	display: flex !important;
+	height: 2rem !important;
 	width: auto !important;
 	max-width: none !important;
-	margin-left: -0.85rem !important;
-	position: relative !important;
+	overflow: visible !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
 	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:first-child {
+	> div.flex.flex-col
+	> * {
+	display: flex !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	position: relative !important;
+	flex: 0 0 auto !important;
+	width: auto !important;
+	max-width: 7.5rem !important;
+	min-width: 0 !important;
+	margin: 0 0 0 -5.2rem !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *:first-child,
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col
+	> *:first-child {
 	margin-left: 0 !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *:nth-child(1),
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
 	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full
-	> .overflow-hidden {
-	width: auto !important;
-	max-width: 9.5rem !important;
+	> div.flex.flex-col
+	> *:nth-child(1) {
+	z-index: 1 !important;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *:nth-child(2),
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col
+	> *:nth-child(2) {
+	z-index: 2 !important;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *:nth-child(3),
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col
+	> *:nth-child(3) {
+	z-index: 3 !important;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *:nth-child(n + 4),
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col
+	> *:nth-child(n + 4) {
+	z-index: 4 !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
-	.flex-1.overflow-hidden
 	button[id^='model-selector-'] {
-	max-width: 9.5rem !important;
-	padding-left: 0.55rem !important;
-	padding-right: 0.55rem !important;
-	border-radius: 9999px !important;
-	background: rgba(255, 255, 255, 0.94) !important;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12) !important;
-	overflow: hidden !important;
-	text-overflow: ellipsis !important;
-	white-space: nowrap !important;
-}
-
-html.dark.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	button[id^='model-selector-'] {
-	background: rgba(28, 28, 28, 0.94) !important;
-	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 1px 3px rgba(0, 0, 0, 0.35) !important;
-}
-
-/* Later models sit above earlier ones for readable overlap */
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:nth-child(1) {
-	z-index: 1;
-}
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:nth-child(2) {
-	z-index: 2;
-}
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:nth-child(3) {
-	z-index: 3;
-}
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:nth-child(n + 4) {
-	z-index: 4;
+	max-width: 7.5rem !important;
+	pointer-events: auto !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
-	.flex-1.overflow-hidden
 	button[aria-label='Add Model'],
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	button[aria-label='Remove Model'] {
-	display: none !important;
-}
-
-/* Hide "Set as default" under collapsed model row */
+	button[aria-label='Remove Model'],
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
-	.flex-1.overflow-hidden
 	.relative.text-left {
 	display: none !important;
 }

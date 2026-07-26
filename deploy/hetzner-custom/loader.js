@@ -187,6 +187,35 @@
 		host.classList.add('custom-ui-input-host');
 	}
 
+	function markModelStack() {
+		const buttons = document.querySelectorAll(
+			'#chat-container nav.sticky.top-0 button[id^="model-selector-"]'
+		);
+		if (!buttons.length) return;
+
+		// Common ancestor that directly contains one child per model row.
+		let ancestor = buttons[0].parentElement;
+		while (ancestor && ancestor !== document.body) {
+			let containsAll = true;
+			for (const button of buttons) {
+				if (!ancestor.contains(button)) {
+					containsAll = false;
+					break;
+				}
+			}
+			if (!containsAll) break;
+
+			const directKids = Array.from(ancestor.children).filter((child) =>
+				Boolean(child.querySelector?.('button[id^="model-selector-"]'))
+			);
+			if (directKids.length >= buttons.length) {
+				ancestor.classList.add('custom-ui-model-stack');
+				return;
+			}
+			ancestor = ancestor.parentElement;
+		}
+	}
+
 	function ensureSidebarButton() {
 		let btn = qs('#custom-ui-sidebar-btn');
 		if (btn) {
@@ -345,6 +374,7 @@
 		}
 
 		markInputHost();
+		markModelStack();
 		syncSidebarOpenClass();
 	}
 
@@ -360,6 +390,7 @@
 			ensureSidebarButton();
 			removeLegacyHitLayers();
 			markInputHost();
+			markModelStack();
 			syncSidebarOpenClass();
 		}, 250);
 	}
