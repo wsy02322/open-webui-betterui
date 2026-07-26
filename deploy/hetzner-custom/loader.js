@@ -6,6 +6,7 @@
 
 	let sidebarLeaveTimer = null;
 	let outsideBound = false;
+	let sidebarToggleLock = false;
 
 	function qs(sel, root) {
 		return (root || document).querySelector(sel);
@@ -24,23 +25,40 @@
 		const buttons = root.querySelectorAll('button[aria-label]');
 		for (const button of buttons) {
 			const label = button.getAttribute('aria-label') || '';
-			if (/sidebar|侧栏|侧边栏|边栏/i.test(label)) {
-				return button;
-			}
+			if (/sidebar|侧栏|侧边栏|边栏/i.test(label)) return button;
 		}
-		return root.querySelector('button');
+		return null;
 	}
 
-	function findNavbarSidebarButton() {
+	/**
+	 * Mobile navbar toggle has Tooltip text but NO aria-label.
+	 * Find it by structure: first flex-none block before the model selector.
+	 */
+	function findMobileNavbarSidebarButton() {
 		const nav = qs('#chat-container nav.sticky.top-0');
 		if (!nav) return null;
-		const buttons = nav.querySelectorAll('button[aria-label]');
-		for (const button of buttons) {
-			const label = button.getAttribute('aria-label') || '';
-			if (/sidebar|侧栏|侧边栏|边栏/i.test(label)) {
-				return button;
+
+		const labeled = findSidebarToggleIn(nav);
+		if (labeled) return labeled;
+
+		const rows = nav.querySelectorAll('.flex.items-center.w-full');
+		for (const row of rows) {
+			for (const child of Array.from(row.children)) {
+				if (child.classList.contains('flex-1') || child.className.includes('flex-1')) break;
+				const btn = child.querySelector('button');
+				if (btn) return btn;
 			}
 		}
+
+		// Fallback: first nav button that is not in right controls / model selector
+		const right = nav.querySelector('.self-start.flex.flex-none');
+		const modelBox = nav.querySelector('.flex-1.overflow-hidden');
+		for (const button of nav.querySelectorAll('button')) {
+			if (right && right.contains(button)) continue;
+			if (modelBox && modelBox.contains(button)) continue;
+			return button;
+		}
+
 		return null;
 	}
 
@@ -56,44 +74,80 @@
 		if (btn) btn.style.display = open ? 'none' : 'inline-flex';
 	}
 
+	function toggleSidebarViaShortcut() {
+		// Open WebUI global shortcut: mod+shift+S
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', {
+				key: 's',
+				code: 'KeyS',
+				ctrlKey: true,
+				metaKey: true,
+				shiftKey: true,
+				bubbles: true,
+				cancelable: true
+			})
+		);
+	}
+
+	function withToggleLock(fn) {
+		if (sidebarToggleLock) return;
+		sidebarToggleLock = true;
+		try {
+			fn();
+		} finally {
+			window.setTimeout(() => {
+				sidebarToggleLock = false;
+				syncSidebarOpenClass();
+			}, 120);
+		}
+	}
+
 	function openSidebar() {
-		const sidebar = qs('#sidebar');
+		withToggleLock(() => {
+			const sidebar = qs('#sidebar');
+			if (sidebar && isSidebarExpanded(sidebar)) {
+				syncSidebarOpenClass();
+				return;
+			}
 
-		// Already open
-		if (sidebar && isSidebarExpanded(sidebar)) {
-			syncSidebarOpenClass();
-			return;
-		}
+			const mobileBtn = findMobileNavbarSidebarButton();
+			if (mobileBtn) {
+				mobileBtn.click();
+				return;
+			}
 
-		// Mobile (and any case where collapsed icon-rail sidebar is absent):
-		// use navbar sidebar toggle first.
-		const navBtn = findNavbarSidebarButton();
-		if (navBtn) {
-			navBtn.click();
-			window.setTimeout(syncSidebarOpenClass, 60);
-			return;
-		}
+			if (sidebar) {
+				const toggle = findSidebarToggleIn(sidebar) || sidebar.querySelector('button');
+				if (toggle) {
+					toggle.click();
+					return;
+				}
+			}
 
-		if (sidebar) {
-			findSidebarToggleIn(sidebar)?.click();
-			window.setTimeout(syncSidebarOpenClass, 60);
-			return;
-		}
-
-		// Last resort: click hidden helper if present
-		qs('#sidebar-new-chat-button');
-		syncSidebarOpenClass();
+			toggleSidebarViaShortcut();
+		});
 	}
 
 	function closeSidebar() {
-		const sidebar = qs('#sidebar');
-		if (sidebar && isSidebarExpanded(sidebar)) {
-			const toggle = findSidebarToggleIn(sidebar) || findNavbarSidebarButton();
-			toggle?.click();
-			window.setTimeout(syncSidebarOpenClass, 60);
-			return;
-		}
-		syncSidebarOpenClass();
+		withToggleLock(() => {
+			const sidebar = qs('#sidebar');
+			if (!(sidebar && isSidebarExpanded(sidebar))) {
+				syncSidebarOpenClass();
+				return;
+			}
+
+			const toggle =
+				findSidebarToggleIn(sidebar) ||
+				findMobileNavbarSidebarButton() ||
+				sidebar.querySelector('button');
+
+			if (toggle) {
+				toggle.click();
+				return;
+			}
+
+			toggleSidebarViaShortcut();
+		});
 	}
 
 	function openTopbar() {
@@ -123,33 +177,41 @@
 
 	function ensureSidebarButton() {
 		let btn = qs('#custom-ui-sidebar-btn');
-		if (btn) return btn;
+		if (btn) {
+			// Re-bind if older version lacked touch handler
+			if (btn.dataset.customBound === '1') return btn;
+		} else {
+			btn = document.createElement('button');
+			btn.id = 'custom-ui-sidebar-btn';
+			btn.type = 'button';
+			btn.title = 'Open sidebar';
+			btn.setAttribute('aria-label', 'Open sidebar');
 
-		btn = document.createElement('button');
-		btn.id = 'custom-ui-sidebar-btn';
-		btn.type = 'button';
-		btn.title = 'Open sidebar';
-		btn.setAttribute('aria-label', 'Open sidebar');
+			const img = document.createElement('img');
+			img.src = '/static/favicon.png';
+			img.alt = '';
+			img.draggable = false;
+			btn.appendChild(img);
+			document.body.appendChild(btn);
+		}
 
-		const img = document.createElement('img');
-		img.src = '/static/favicon.png';
-		img.alt = '';
-		img.draggable = false;
-		btn.appendChild(img);
+		btn.dataset.customBound = '1';
 
-		btn.addEventListener(
-			'click',
-			(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				closeTopbar();
-				closeInput();
-				openSidebar();
-			},
-			true
-		);
+		const activate = (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (typeof event.stopImmediatePropagation === 'function') {
+				event.stopImmediatePropagation();
+			}
+			closeTopbar();
+			closeInput();
+			openSidebar();
+		};
 
-		document.body.appendChild(btn);
+		// pointerup is more reliable than click on some mobile browsers
+		btn.addEventListener('pointerup', activate, true);
+		btn.addEventListener('click', activate, true);
+
 		return btn;
 	}
 
@@ -229,11 +291,15 @@
 			(event) => {
 				const target = event.target;
 				if (!(target instanceof Element)) return;
-
-				// Don't steal clicks from sidebar toggle / custom btn
 				if (target.closest('#custom-ui-sidebar-btn')) return;
-				const label = target.closest('button')?.getAttribute('aria-label') || '';
+
+				const btn = target.closest('button');
+				const label = btn?.getAttribute('aria-label') || '';
 				if (/sidebar|侧栏|侧边栏|边栏/i.test(label)) return;
+
+				// Ignore the structural mobile sidebar toggle button
+				const mobileToggle = findMobileNavbarSidebarButton();
+				if (mobileToggle && (btn === mobileToggle || mobileToggle.contains(target))) return;
 
 				closeSidebar();
 				closeInput();
@@ -265,8 +331,10 @@
 		const target = event.target;
 		if (!(target instanceof Element)) return;
 
-		const inSidebar =
-			Boolean(target.closest('#sidebar')) || Boolean(target.closest('#custom-ui-sidebar-btn'));
+		// Never treat the activate gesture on our button as "outside"
+		if (target.closest('#custom-ui-sidebar-btn')) return;
+
+		const inSidebar = Boolean(target.closest('#sidebar'));
 		const inTopbar =
 			Boolean(target.closest('#chat-container nav.sticky.top-0')) ||
 			Boolean(target.closest('#custom-ui-topbar-hit'));
