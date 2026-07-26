@@ -134,7 +134,7 @@ html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.fl
 	background: rgba(17, 17, 17, 0.88);
 }
 
-/* Collapsed: keep last model only */
+/* Collapsed: all active models overlap on one row */
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	opacity: 1 !important;
 	overflow: hidden !important;
@@ -147,7 +147,19 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	.flex-1.overflow-hidden {
-	max-height: 2rem !important;
+	max-height: 2.1rem !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col {
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	align-items: center !important;
+	width: max-content !important;
+	max-width: 100% !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
@@ -155,8 +167,91 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
 	.flex.flex-col
-	> .flex.w-full:not(:last-child) {
-	display: none !important;
+	> .flex.w-full {
+	display: flex !important;
+	width: auto !important;
+	max-width: none !important;
+	margin-left: -0.85rem !important;
+	position: relative !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:first-child {
+	margin-left: 0 !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full
+	> .overflow-hidden {
+	width: auto !important;
+	max-width: 9.5rem !important;
+}
+
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	button[id^='model-selector-'] {
+	max-width: 9.5rem !important;
+	padding-left: 0.55rem !important;
+	padding-right: 0.55rem !important;
+	border-radius: 9999px !important;
+	background: rgba(255, 255, 255, 0.94) !important;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+
+html.dark.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	button[id^='model-selector-'] {
+	background: rgba(28, 28, 28, 0.94) !important;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Later models sit above earlier ones for readable overlap */
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:nth-child(1) {
+	z-index: 1;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:nth-child(2) {
+	z-index: 2;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:nth-child(3) {
+	z-index: 3;
+}
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	.flex.flex-col
+	> .flex.w-full:nth-child(n + 4) {
+	z-index: 4;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
@@ -172,13 +267,13 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	display: none !important;
 }
 
+/* Hide "Set as default" under collapsed model row */
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
-	.flex.flex-col
-	> .flex.w-full:last-child {
-	max-width: 100% !important;
+	.relative.text-left {
+	display: none !important;
 }
 
 /* Expanded: show all models */
