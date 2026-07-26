@@ -1,6 +1,6 @@
 /*
- * Open WebUI server-side UI customization (v7)
- * Mobile full-width columns; collapsed topbar shows last model
+ * Open WebUI server-side UI customization (v8)
+ * Bugbot fixes: pb-2 selector, mobile sidebar, top/input hit layers, observer debounce
  */
 
 /* =============================================================================
@@ -64,10 +64,28 @@ html.custom-ui-sidebar-open #custom-ui-sidebar-btn {
 	}
 }
 
-/* Mobile: when closed, hide native navbar sidebar icon (we use custom btn) */
+/*
+ * Mobile: visually hide native navbar sidebar icon (keep it in layout/DOM so
+ * programmatic click still works on WebKit — do NOT use display:none).
+ */
 @media (max-width: 767px) {
-	html.custom-ui-has-messages #chat-container nav.sticky.top-0 > div > div > div.flex.items-center > div.flex-none:first-child {
-		display: none !important;
+	html.custom-ui-has-messages
+		#chat-container
+		nav.sticky.top-0
+		> div
+		> div
+		> div.flex.items-center
+		> div.flex-none:first-child {
+		position: absolute !important;
+		width: 1px !important;
+		height: 1px !important;
+		margin: -1px !important;
+		padding: 0 !important;
+		overflow: hidden !important;
+		clip: rect(0, 0, 0, 0) !important;
+		border: 0 !important;
+		opacity: 0 !important;
+		pointer-events: none !important;
 	}
 }
 
@@ -85,7 +103,7 @@ html.custom-ui-has-messages #chat-container nav.sticky.top-0 {
 	min-height: 0 !important;
 	padding-top: 0.2rem !important;
 	padding-bottom: 0.2rem !important;
-	padding-left: 2.7rem !important; /* room for custom sidebar btn */
+	padding-left: 2.7rem !important;
 	background: transparent !important;
 	z-index: 45 !important;
 	pointer-events: none;
@@ -125,7 +143,10 @@ html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hi
 	min-width: 0 !important;
 }
 
-html.custom-ui-has-messages:not(.custom-ui-topbar-open) #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
+html.custom-ui-has-messages:not(.custom-ui-topbar-open)
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden {
 	max-height: 2rem !important;
 }
 
@@ -161,7 +182,10 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 }
 
 /* Expanded: show all models */
-html.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
+html.custom-ui-has-messages.custom-ui-topbar-open
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden {
 	max-height: 14rem !important;
 }
 
@@ -175,27 +199,14 @@ html.dark.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.stick
 	background: rgba(17, 17, 17, 0.92) !important;
 }
 
-#custom-ui-topbar-hit {
-	position: fixed;
-	top: 0;
-	left: 3.1rem;
-	right: 7.2rem;
-	height: 2.35rem;
-	z-index: 44;
-	background: transparent;
-}
-
-html.custom-ui-topbar-open #custom-ui-topbar-hit,
-html:not(.custom-ui-has-messages) #custom-ui-topbar-hit {
-	display: none;
-}
+/* No full-width fixed topbar hit layer (it blocked message taps). */
 
 #navbar-bg-gradient-to-b {
 	display: none !important;
 }
 
 /* =============================================================================
-   3. Full-height content + overlay input
+   3. Full-height content + overlay input host only
    ============================================================================= */
 
 html.custom-ui-has-messages #chat-pane {
@@ -206,9 +217,15 @@ html.custom-ui-has-messages #chat-pane {
 }
 
 html.custom-ui-has-messages #messages-container {
-	padding-top: 2.6rem !important; /* clear collapsed top model row */
-	padding-bottom: 5.25rem !important; /* clear floating input */
+	padding-top: 2.6rem !important;
+	padding-bottom: 5.25rem !important;
 	height: 100% !important;
+	/* Explicitly protect messages pane from overlay rules */
+	position: relative !important;
+	left: auto !important;
+	right: auto !important;
+	bottom: auto !important;
+	pointer-events: auto !important;
 }
 
 html.custom-ui-has-messages.custom-ui-topbar-open #messages-container {
@@ -219,8 +236,10 @@ html.custom-ui-has-messages [id^='message-'] {
 	scroll-margin-top: 0.35rem !important;
 }
 
-html.custom-ui-has-messages #chat-pane > div.pb-2,
-html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] {
+/* ONLY the MessageInput host — never #messages-container (which has pb-2.5) */
+html.custom-ui-has-messages #chat-pane > div:has(> #message-input-container),
+html.custom-ui-has-messages #chat-pane > .custom-ui-input-host,
+html.custom-ui-has-messages #chat-pane > div:has(#message-input-container) {
 	position: absolute !important;
 	left: 0 !important;
 	right: 0 !important;
@@ -231,8 +250,8 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] {
 	pointer-events: none;
 }
 
-html.custom-ui-has-messages #chat-pane > div.pb-2 > *,
-html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
+html.custom-ui-has-messages #chat-pane > div:has(#message-input-container) > *,
+html.custom-ui-has-messages #chat-pane > .custom-ui-input-host > * {
 	pointer-events: auto;
 }
 
@@ -240,7 +259,6 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
    4. Multi-column polish
    ============================================================================= */
 
-/* Mobile: borderless full-width columns (keep snap/swipe) */
 @media (max-width: 767px) {
 	html.custom-ui-active .message-listitem {
 		padding-left: 0 !important;
@@ -275,7 +293,6 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
 	}
 }
 
-/* Desktop: tight columns with thin divider */
 @media (min-width: 768px) {
 	html.custom-ui-active .message-listitem:has([id^='responses-container-']) {
 		padding-left: 0 !important;
@@ -325,6 +342,7 @@ html.custom-ui-has-messages #message-input-container {
 	margin-left: auto !important;
 	margin-right: auto !important;
 	backdrop-filter: blur(10px);
+	cursor: text;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-input-open) #message-input-container {
@@ -349,7 +367,8 @@ html.custom-ui-has-messages:not(.custom-ui-input-open) #message-input-container 
 html.custom-ui-has-messages:not(.custom-ui-input-open) #message-input-container #chat-input-container {
 	padding-top: 0.3rem !important;
 	padding-bottom: 0.3rem !important;
-	pointer-events: none;
+	/* Keep tappable so users can open by tapping the visible pill */
+	pointer-events: auto !important;
 }
 
 html.custom-ui-has-messages.custom-ui-input-open #message-input-container {
@@ -358,21 +377,4 @@ html.custom-ui-has-messages.custom-ui-input-open #message-input-container {
 	opacity: 1 !important;
 	transform: none !important;
 	border-radius: 1.5rem !important;
-}
-
-#custom-ui-input-hit {
-	position: fixed;
-	left: 50%;
-	bottom: 0.35rem;
-	transform: translateX(-50%);
-	width: min(260px, 68vw);
-	height: 2.7rem;
-	z-index: 41;
-	background: transparent;
-	border-radius: 9999px;
-}
-
-html.custom-ui-input-open #custom-ui-input-hit,
-html:not(.custom-ui-has-messages) #custom-ui-input-hit {
-	display: none;
 }

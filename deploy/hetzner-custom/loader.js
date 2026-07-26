@@ -3,10 +3,13 @@
 
 	const SIDEBAR_LEAVE_DELAY_MS = 280;
 	const MOBILE_BREAKPOINT = 768;
+	const OBSERVER_DEBOUNCE_MS = 120;
 
 	let sidebarLeaveTimer = null;
 	let outsideBound = false;
 	let sidebarToggleLock = false;
+	let observerTimer = null;
+	let bootstrapped = false;
 
 	function qs(sel, root) {
 		return (root || document).querySelector(sel);
@@ -18,6 +21,14 @@
 
 	function setOpen(flag, on) {
 		document.documentElement.classList.toggle(flag, on);
+	}
+
+	function isVisible(el) {
+		if (!el) return false;
+		const style = window.getComputedStyle(el);
+		if (style.display === 'none' || style.visibility === 'hidden') return false;
+		const rect = el.getBoundingClientRect();
+		return rect.width > 0 && rect.height > 0;
 	}
 
 	function findSidebarToggleIn(root) {
@@ -50,7 +61,6 @@
 			}
 		}
 
-		// Fallback: first nav button that is not in right controls / model selector
 		const right = nav.querySelector('.self-start.flex.flex-none');
 		const modelBox = nav.querySelector('.flex-1.overflow-hidden');
 		for (const button of nav.querySelectorAll('button')) {
@@ -75,7 +85,6 @@
 	}
 
 	function toggleSidebarViaShortcut() {
-		// Open WebUI global shortcut: mod+shift+S
 		document.dispatchEvent(
 			new KeyboardEvent('keydown', {
 				key: 's',
@@ -89,6 +98,36 @@
 		);
 	}
 
+	function clickSidebarControl(preferOpen) {
+		const sidebar = qs('#sidebar');
+		const expanded = Boolean(sidebar && isSidebarExpanded(sidebar));
+		if (preferOpen && expanded) return true;
+		if (!preferOpen && !expanded) return true;
+
+		// Prefer a visible, labeled toggle inside the sidebar itself.
+		if (sidebar) {
+			const toggle = findSidebarToggleIn(sidebar);
+			if (toggle && isVisible(toggle)) {
+				toggle.click();
+				return true;
+			}
+		}
+
+		// Mobile navbar button (may be visually clipped but still in DOM).
+		const mobileBtn = findMobileNavbarSidebarButton();
+		if (mobileBtn) {
+			const style = window.getComputedStyle(mobileBtn);
+			if (style.display !== 'none') {
+				mobileBtn.click();
+				return true;
+			}
+		}
+
+		// Reliable fallback used by Open WebUI itself.
+		toggleSidebarViaShortcut();
+		return true;
+	}
+
 	function withToggleLock(fn) {
 		if (sidebarToggleLock) return;
 		sidebarToggleLock = true;
@@ -98,55 +137,19 @@
 			window.setTimeout(() => {
 				sidebarToggleLock = false;
 				syncSidebarOpenClass();
-			}, 120);
+			}, 160);
 		}
 	}
 
 	function openSidebar() {
 		withToggleLock(() => {
-			const sidebar = qs('#sidebar');
-			if (sidebar && isSidebarExpanded(sidebar)) {
-				syncSidebarOpenClass();
-				return;
-			}
-
-			const mobileBtn = findMobileNavbarSidebarButton();
-			if (mobileBtn) {
-				mobileBtn.click();
-				return;
-			}
-
-			if (sidebar) {
-				const toggle = findSidebarToggleIn(sidebar) || sidebar.querySelector('button');
-				if (toggle) {
-					toggle.click();
-					return;
-				}
-			}
-
-			toggleSidebarViaShortcut();
+			clickSidebarControl(true);
 		});
 	}
 
 	function closeSidebar() {
 		withToggleLock(() => {
-			const sidebar = qs('#sidebar');
-			if (!(sidebar && isSidebarExpanded(sidebar))) {
-				syncSidebarOpenClass();
-				return;
-			}
-
-			const toggle =
-				findSidebarToggleIn(sidebar) ||
-				findMobileNavbarSidebarButton() ||
-				sidebar.querySelector('button');
-
-			if (toggle) {
-				toggle.click();
-				return;
-			}
-
-			toggleSidebarViaShortcut();
+			clickSidebarControl(false);
 		});
 	}
 
@@ -175,10 +178,18 @@
 		setOpen('custom-ui-input-open', false);
 	}
 
+	function markInputHost() {
+		const input = qs('#message-input-container');
+		if (!input) return;
+		const host = input.parentElement;
+		if (!host) return;
+		if (host.id === 'messages-container') return;
+		host.classList.add('custom-ui-input-host');
+	}
+
 	function ensureSidebarButton() {
 		let btn = qs('#custom-ui-sidebar-btn');
 		if (btn) {
-			// Re-bind if older version lacked touch handler
 			if (btn.dataset.customBound === '1') return btn;
 		} else {
 			btn = document.createElement('button');
@@ -214,55 +225,15 @@
 			openSidebar();
 		};
 
-		// pointerup is more reliable than click on some mobile browsers
 		btn.addEventListener('pointerup', activate, true);
 		btn.addEventListener('click', activate, true);
 
 		return btn;
 	}
 
-	function ensureTopbarHit() {
-		let hit = qs('#custom-ui-topbar-hit');
-		if (hit) return hit;
-
-		hit = document.createElement('div');
-		hit.id = 'custom-ui-topbar-hit';
-		hit.setAttribute('aria-hidden', 'true');
-		hit.addEventListener(
-			'pointerdown',
-			(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				closeSidebar();
-				closeInput();
-				openTopbar();
-			},
-			true
-		);
-		document.body.appendChild(hit);
-		return hit;
-	}
-
-	function ensureInputHit() {
-		let hit = qs('#custom-ui-input-hit');
-		if (hit) return hit;
-
-		hit = document.createElement('div');
-		hit.id = 'custom-ui-input-hit';
-		hit.setAttribute('aria-hidden', 'true');
-		hit.addEventListener(
-			'pointerdown',
-			(event) => {
-				event.preventDefault();
-				event.stopPropagation();
-				closeSidebar();
-				closeTopbar();
-				openInput();
-			},
-			true
-		);
-		document.body.appendChild(hit);
-		return hit;
+	function removeLegacyHitLayers() {
+		qs('#custom-ui-topbar-hit')?.remove();
+		qs('#custom-ui-input-hit')?.remove();
 	}
 
 	function setupSidebarRegion() {
@@ -303,9 +274,11 @@
 				const label = btn?.getAttribute('aria-label') || '';
 				if (/sidebar|侧栏|侧边栏|边栏/i.test(label)) return;
 
-				// Ignore the structural mobile sidebar toggle button
 				const mobileToggle = findMobileNavbarSidebarButton();
 				if (mobileToggle && (btn === mobileToggle || mobileToggle.contains(target))) return;
+
+				// Only expand when interacting with the model selector area
+				if (!target.closest('.flex-1.overflow-hidden')) return;
 
 				closeSidebar();
 				closeInput();
@@ -317,7 +290,9 @@
 
 	function setupInputRegion() {
 		const input = qs('#message-input-container');
-		if (!input || input.dataset.customRegionBound === '1') return;
+		if (!input) return;
+		markInputHost();
+		if (input.dataset.customRegionBound === '1') return;
 		input.dataset.customRegionBound = '1';
 
 		input.addEventListener('pointerdown', () => {
@@ -336,17 +311,13 @@
 	function onDocumentPointerDown(event) {
 		const target = event.target;
 		if (!(target instanceof Element)) return;
-
-		// Never treat the activate gesture on our button as "outside"
 		if (target.closest('#custom-ui-sidebar-btn')) return;
 
 		const inSidebar = Boolean(target.closest('#sidebar'));
-		const inTopbar =
-			Boolean(target.closest('#chat-container nav.sticky.top-0')) ||
-			Boolean(target.closest('#custom-ui-topbar-hit'));
+		const inTopbar = Boolean(target.closest('#chat-container nav.sticky.top-0'));
 		const inInput =
 			Boolean(target.closest('#message-input-container')) ||
-			Boolean(target.closest('#custom-ui-input-hit')) ||
+			Boolean(target.closest('.custom-ui-input-host')) ||
 			Boolean(target.closest('#chat-input'));
 
 		if (!inSidebar) closeSidebar();
@@ -373,31 +344,38 @@
 			closeInput();
 		}
 
+		markInputHost();
 		syncSidebarOpenClass();
 	}
 
 	function bootstrap() {
-		try {
-			localStorage.sidebar = 'false';
-		} catch (error) {
-			/* ignore */
-		}
+		if (bootstrapped) return;
+		bootstrapped = true;
 
 		window.setTimeout(() => {
+			// Close via UI path only — avoid fighting the Svelte store with localStorage writes.
 			closeSidebar();
 			closeTopbar();
 			closeInput();
 			ensureSidebarButton();
-			ensureTopbarHit();
-			ensureInputHit();
+			removeLegacyHitLayers();
+			markInputHost();
 			syncSidebarOpenClass();
 		}, 250);
 	}
 
+	function refreshChrome() {
+		ensureSidebarButton();
+		removeLegacyHitLayers();
+		setupSidebarRegion();
+		setupTopbarRegion();
+		setupInputRegion();
+		updatePageState();
+	}
+
 	function init() {
 		ensureSidebarButton();
-		ensureTopbarHit();
-		ensureInputHit();
+		removeLegacyHitLayers();
 		setupSidebarRegion();
 		setupTopbarRegion();
 		setupInputRegion();
@@ -413,13 +391,8 @@
 	}
 
 	const observer = new MutationObserver(() => {
-		ensureSidebarButton();
-		ensureTopbarHit();
-		ensureInputHit();
-		setupSidebarRegion();
-		setupTopbarRegion();
-		setupInputRegion();
-		updatePageState();
+		clearTimeout(observerTimer);
+		observerTimer = window.setTimeout(refreshChrome, OBSERVER_DEBOUNCE_MS);
 	});
 
 	observer.observe(document.body, { childList: true, subtree: true });
