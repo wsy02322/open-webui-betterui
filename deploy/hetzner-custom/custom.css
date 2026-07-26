@@ -1,6 +1,6 @@
 /*
- * Open WebUI server-side UI customization (v6)
- * Mobile sidebar open via structural navbar toggle + shortcut fallback
+ * Open WebUI server-side UI customization (v7)
+ * Mobile full-width columns; collapsed topbar shows last model
  */
 
 /* =============================================================================
@@ -116,7 +116,7 @@ html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.fl
 	background: rgba(17, 17, 17, 0.88);
 }
 
-/* Collapsed: keep first model only */
+/* Collapsed: keep last model only */
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	opacity: 1 !important;
 	overflow: hidden !important;
@@ -134,7 +134,7 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
 	.flex.flex-col
-	> .flex.w-full:not(:first-child) {
+	> .flex.w-full:not(:last-child) {
 	display: none !important;
 }
 
@@ -156,7 +156,7 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
 	.flex.flex-col
-	> .flex.w-full:first-child {
+	> .flex.w-full:last-child {
 	max-width: 100% !important;
 }
 
@@ -237,9 +237,45 @@ html.custom-ui-has-messages #chat-pane > div[class*='pb-2'] > * {
 }
 
 /* =============================================================================
-   4. Multi-column polish (desktop)
+   4. Multi-column polish
    ============================================================================= */
 
+/* Mobile: borderless full-width columns (keep snap/swipe) */
+@media (max-width: 767px) {
+	html.custom-ui-active .message-listitem {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		max-width: 100% !important;
+	}
+
+	html.custom-ui-active .message-listitem:has([id^='responses-container-']) {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+	}
+
+	html.custom-ui-active [id^='responses-container-'] {
+		gap: 0 !important;
+		padding: 0 !important;
+		margin: 0 !important;
+	}
+
+	html.custom-ui-active [id^='responses-container-'] > div.snap-center {
+		margin: 0 !important;
+		padding: 0.5rem 0.75rem !important;
+		border: none !important;
+		border-width: 0 !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+		background: transparent !important;
+		min-width: 100% !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+}
+
+/* Desktop: tight columns with thin divider */
 @media (min-width: 768px) {
 	html.custom-ui-active .message-listitem:has([id^='responses-container-']) {
 		padding-left: 0 !important;
