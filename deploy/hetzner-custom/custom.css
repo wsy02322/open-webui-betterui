@@ -1,6 +1,6 @@
 /*
- * Open WebUI server-side UI customization (v10)
- * Collapsed topbar: crude same-row overlap of ALL active models
+ * Open WebUI server-side UI customization (v11)
+ * Collapsed: left-aligned full-text overlap; click expands in-use models only
  */
 
 /* =============================================================================
@@ -134,7 +134,7 @@ html.dark.custom-ui-has-messages #chat-container nav.sticky.top-0 .self-start.fl
 	background: rgba(17, 17, 17, 0.88);
 }
 
-/* Collapsed: crude same-row overlap of ALL models (unreadability OK) */
+/* Collapsed: left-aligned full-text overlap of ALL in-use models */
 html.custom-ui-has-messages #chat-container nav.sticky.top-0 .flex-1.overflow-hidden {
 	opacity: 1 !important;
 	overflow: visible !important;
@@ -160,12 +160,10 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	nav.sticky.top-0
 	.flex-1.overflow-hidden
 	> div.flex.flex-col {
-	display: flex !important;
-	flex-direction: row !important;
-	flex-wrap: nowrap !important;
-	align-items: center !important;
+	position: relative !important;
+	display: block !important;
 	height: 2rem !important;
-	width: auto !important;
+	width: 100% !important;
 	max-width: none !important;
 	overflow: visible !important;
 }
@@ -184,26 +182,14 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	display: flex !important;
 	visibility: visible !important;
 	opacity: 1 !important;
-	position: relative !important;
-	flex: 0 0 auto !important;
-	width: auto !important;
-	max-width: 7.5rem !important;
+	position: absolute !important;
+	left: 0 !important;
+	top: 0 !important;
+	right: auto !important;
+	margin: 0 !important;
+	width: max-content !important;
+	max-width: none !important;
 	min-width: 0 !important;
-	margin: 0 0 0 -5.2rem !important;
-}
-
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.custom-ui-model-stack
-	> *:first-child,
-html.custom-ui-has-messages:not(.custom-ui-topbar-open)
-	#chat-container
-	nav.sticky.top-0
-	.flex-1.overflow-hidden
-	> div.flex.flex-col
-	> *:first-child {
-	margin-left: 0 !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
@@ -263,8 +249,14 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	#chat-container
 	nav.sticky.top-0
 	button[id^='model-selector-'] {
-	max-width: 7.5rem !important;
+	max-width: none !important;
+	width: max-content !important;
+	white-space: nowrap !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
 	pointer-events: auto !important;
+	justify-content: flex-start !important;
+	text-align: left !important;
 }
 
 html.custom-ui-has-messages:not(.custom-ui-topbar-open)
@@ -282,12 +274,48 @@ html.custom-ui-has-messages:not(.custom-ui-topbar-open)
 	display: none !important;
 }
 
-/* Expanded: show all models */
+/* Expanded: show currently in-use models as a normal vertical list */
 html.custom-ui-has-messages.custom-ui-topbar-open
 	#chat-container
 	nav.sticky.top-0
 	.flex-1.overflow-hidden {
 	max-height: 14rem !important;
+	overflow: auto !important;
+}
+
+html.custom-ui-has-messages.custom-ui-topbar-open
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack,
+html.custom-ui-has-messages.custom-ui-topbar-open
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col {
+	position: static !important;
+	display: flex !important;
+	flex-direction: column !important;
+	height: auto !important;
+	width: 100% !important;
+}
+
+html.custom-ui-has-messages.custom-ui-topbar-open
+	#chat-container
+	nav.sticky.top-0
+	.custom-ui-model-stack
+	> *,
+html.custom-ui-has-messages.custom-ui-topbar-open
+	#chat-container
+	nav.sticky.top-0
+	.flex-1.overflow-hidden
+	> div.flex.flex-col
+	> * {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	margin: 0 !important;
 }
 
 html.custom-ui-has-messages.custom-ui-topbar-open #chat-container nav.sticky.top-0 {

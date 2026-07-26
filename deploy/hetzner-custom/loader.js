@@ -287,10 +287,40 @@
 		});
 	}
 
+	function isTopbarOpen() {
+		return document.documentElement.classList.contains('custom-ui-topbar-open');
+	}
+
 	function setupTopbarRegion() {
 		const nav = qs('#chat-container nav.sticky.top-0');
 		if (!nav || nav.dataset.customRegionBound === '1') return;
 		nav.dataset.customRegionBound = '1';
+
+		const interceptCollapsedModelClick = (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+			if (isTopbarOpen()) return;
+			if (!document.documentElement.classList.contains('custom-ui-has-messages')) return;
+
+			const modelBtn = target.closest('button[id^="model-selector-"]');
+			const inModelArea = target.closest('.flex-1.overflow-hidden, .custom-ui-model-stack');
+			if (!modelBtn && !inModelArea) return;
+
+			// Collapsed: do NOT open the full model catalog dropdown.
+			// Expand the in-use model list instead.
+			event.preventDefault();
+			event.stopPropagation();
+			if (typeof event.stopImmediatePropagation === 'function') {
+				event.stopImmediatePropagation();
+			}
+
+			closeSidebar();
+			closeInput();
+			openTopbar();
+		};
+
+		nav.addEventListener('pointerdown', interceptCollapsedModelClick, true);
+		nav.addEventListener('click', interceptCollapsedModelClick, true);
 
 		nav.addEventListener(
 			'pointerdown',
@@ -306,8 +336,7 @@
 				const mobileToggle = findMobileNavbarSidebarButton();
 				if (mobileToggle && (btn === mobileToggle || mobileToggle.contains(target))) return;
 
-				// Only expand when interacting with the model selector area
-				if (!target.closest('.flex-1.overflow-hidden')) return;
+				if (!target.closest('.flex-1.overflow-hidden, .custom-ui-model-stack')) return;
 
 				closeSidebar();
 				closeInput();
