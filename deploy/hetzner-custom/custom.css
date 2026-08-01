@@ -1,5 +1,5 @@
 /*
- * Open WebUI server-side UI customization (v14 — light immersion)
+ * Open WebUI server-side UI customization (v14.1)
  * Pure CSS: edge-to-edge messages, overlay chrome, idle transparency.
  */
 
@@ -113,4 +113,18 @@ html:has(#messages-container .message-listitem) #message-input-container:focus-w
 
 #navbar-bg-gradient-to-b {
 	display: none !important;
+}
+
+/* =============================================================================
+   4. Desktop: collapsed sidebar rail floats — chat uses full width
+   ============================================================================= */
+
+@media (min-width: 768px) {
+	#sidebar:not([data-state='true']) {
+		position: fixed !important;
+		left: 0 !important;
+		top: 0 !important;
+		height: 100vh !important;
+		z-index: 50 !important;
+	}
 }
