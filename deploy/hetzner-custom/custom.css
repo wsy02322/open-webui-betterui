@@ -1,5 +1,5 @@
 /*
- * Open WebUI server-side UI customization (v14.2)
+ * Open WebUI server-side UI customization (v14.3)
  * Pure CSS: edge-to-edge messages, overlay chrome, idle transparency.
  */
 
@@ -156,4 +156,23 @@ html:has(#messages-container .message-listitem) #message-input-container:focus-w
 		height: 100vh !important;
 		z-index: 50 !important;
 	}
+}
+
+/* =============================================================================
+   5. Hide scrollbars on chat areas (scroll still works)
+   ============================================================================= */
+
+#chat-pane,
+#messages-container,
+[id^='responses-container-'] {
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
+}
+
+#chat-pane::-webkit-scrollbar,
+#messages-container::-webkit-scrollbar,
+[id^='responses-container-']::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
 }
