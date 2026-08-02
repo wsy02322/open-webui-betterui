@@ -1,5 +1,5 @@
 /*
- * Open WebUI server-side UI customization (v14.1)
+ * Open WebUI server-side UI customization (v14.2)
  * Pure CSS: edge-to-edge messages, overlay chrome, idle transparency.
  */
 
@@ -7,10 +7,28 @@
    1. Message geometry — wider reading area
    ============================================================================= */
 
+#messages-container .message-listitem,
+#messages-container section,
+#messages-container ul {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+}
+
 #messages-container .message-listitem {
 	padding-left: 0 !important;
 	padding-right: 0 !important;
 	max-width: 100% !important;
+}
+
+.message-listitem .markdown-prose,
+.message-listitem .chat-assistant,
+.message-listitem .chat-user {
+	max-width: none !important;
+	width: 100% !important;
 }
 
 .message-listitem .assistant-message-profile-image,
@@ -26,6 +44,8 @@
 	gap: 0 !important;
 	margin: 0 !important;
 	padding: 0 !important;
+	width: 100% !important;
+	max-width: 100% !important;
 }
 
 [id^='responses-container-'] > div.snap-center {
@@ -33,6 +53,15 @@
 	padding: 0.35rem 0.5rem !important;
 	border-width: 1px !important;
 	border-radius: 0 !important;
+	box-sizing: border-box !important;
+}
+
+@media (max-width: 767px) {
+	[id^='responses-container-'] > div.snap-center {
+		width: 100% !important;
+		min-width: 100% !important;
+		max-width: 100% !important;
+	}
 }
 
 /* =============================================================================
