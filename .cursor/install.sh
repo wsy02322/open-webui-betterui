@@ -19,7 +19,7 @@ npm ci
 
 # ── Backend Python environment ───────────────────────────────────────────────
 echo "Creating Python virtual environment (.venv)..."
-uv venv --python 3.12 .venv
+uv venv --python 3.12 --allow-existing .venv
 
 echo "Installing backend dependencies..."
 VIRTUAL_ENV="$REPO_ROOT/.venv" uv pip install -r backend/requirements.txt
