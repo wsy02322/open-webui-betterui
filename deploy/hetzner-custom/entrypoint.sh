@@ -26,5 +26,6 @@ else
 	echo "[betterui] skip reasoning patch (script or middleware missing)"
 fi
 
-cd /app
+# Official image WORKDIR is /app/backend; start.sh lives there (not /app).
+cd /app/backend
 exec bash start.sh
